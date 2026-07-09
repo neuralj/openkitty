@@ -1,0 +1,17 @@
+{
+  "name": "openkitty",
+  "version": "1.0.0",
+  "description": "OpenCode plugins for NeuralJ",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "1.17.10"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^5.5.0"
+  }
+}
