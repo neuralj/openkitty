@@ -1,0 +1,1 @@
+var e={pending:`warning`,running:``,completed:`success`,failed:`danger`};function t(t){return e[t]||`info`}export{t};

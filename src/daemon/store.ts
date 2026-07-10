@@ -17,6 +17,32 @@ export interface TaskRecord {
   createdAt: number;
   updatedAt: number;
   error?: string;
+  pipelineId?: string; // 所属 pipeline（L1 编排）
+}
+
+export type PipelineStatus = "pending" | "running" | "completed" | "failed";
+export type StageStatus = "pending" | "running" | "completed" | "failed" | "skipped";
+
+export interface PipelineStage {
+  index: number;
+  label: string;
+  prompt: string;
+  model?: string;
+  status: StageStatus;
+  taskId?: string;
+  error?: string;
+}
+
+export interface PipelineRecord {
+  id: string;
+  name: string;
+  directory: string;
+  status: PipelineStatus;
+  stages: PipelineStage[];
+  currentStage: number;
+  sessionId?: string; // 共享 session：pipeline 内所有 stage 复用同一 OpenCode session
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface RecurringRecord {
@@ -34,6 +60,7 @@ export interface RecurringRecord {
 interface DBShape {
   tasks: TaskRecord[];
   recurring: RecurringRecord[];
+  pipelines: PipelineRecord[];
 }
 
 export class Store {
@@ -45,9 +72,9 @@ export class Store {
   /** 打开（或创建）JSON 持久化文件 */
   static async create(dbPath: string): Promise<Store> {
     const adapter = new JSONFile<DBShape>(dbPath);
-    const db = new Low<DBShape>(adapter, { tasks: [], recurring: [] });
+    const db = new Low<DBShape>(adapter, { tasks: [], recurring: [], pipelines: [] });
     await db.read();
-    if (!db.data) db.data = { tasks: [], recurring: [] };
+    if (!db.data) db.data = { tasks: [], recurring: [], pipelines: [] };
     return new Store(db, dbPath);
   }
 
@@ -92,6 +119,11 @@ export class Store {
     await this.update(id, { status: "completed" });
   }
 
+  /** 手动重试：重置为 pending */
+  async markRetry(id: string): Promise<void> {
+    await this.update(id, { status: "pending", error: undefined });
+  }
+
   /** 失败：未超 maxAttempts 则回到 pending（重试），否则终态 failed */
   async markFailed(id: string, reason: string): Promise<void> {
     const t = await this.get(id);
@@ -123,6 +155,33 @@ export class Store {
 
   async removeRecurring(id: string): Promise<void> {
     this.db.data.recurring = this.db.data.recurring.filter((r) => r.id !== id);
+    await this.db.write();
+  }
+
+  // ---- pipelines ----
+  async addPipeline(pl: PipelineRecord): Promise<void> {
+    this.db.data.pipelines.push(pl);
+    await this.db.write();
+  }
+
+  async getPipeline(id: string): Promise<PipelineRecord | undefined> {
+    return this.db.data.pipelines.find((p) => p.id === id);
+  }
+
+  async listPipelines(): Promise<PipelineRecord[]> {
+    return [...this.db.data.pipelines];
+  }
+
+  async updatePipeline(id: string, patch: Partial<PipelineRecord>): Promise<PipelineRecord | undefined> {
+    const p = this.db.data.pipelines.find((x) => x.id === id);
+    if (!p) return undefined;
+    Object.assign(p, patch);
+    await this.db.write();
+    return p;
+  }
+
+  async removePipeline(id: string): Promise<void> {
+    this.db.data.pipelines = this.db.data.pipelines.filter((p) => p.id !== id);
     await this.db.write();
   }
 }

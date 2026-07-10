@@ -1,0 +1,1 @@
+function e(e){if(!e)return`unknown`;let t=Date.now()-e;return t<6e4?`just now`:t<36e5?`${Math.floor(t/6e4)}m ago`:t<864e5?`${Math.floor(t/36e5)}h ago`:`${Math.floor(t/864e5)}d ago`}function t(e){return e?new Date(e).toLocaleString():`unknown`}export{e as n,t};

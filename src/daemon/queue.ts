@@ -73,8 +73,41 @@ export class QueueProcessor {
     return true;
   }
 
+  /** 恢复卡住的 running 任务（daemon 重启导致 markCompleted 未执行） */
+  async recoverStaleRunning(): Promise<void> {
+    const all = await this.store.listAll();
+    const staleCutoff = Date.now() - 30 * 60 * 1000; // 30min 超时
+    for (const t of all) {
+      if (t.status !== "running") continue;
+      if (!t.agentID) {
+        // 没有 agentID 的 running 任务回退到 pending
+        await this.store.update(t.id, { status: "pending", agentID: undefined });
+        continue;
+      }
+      // 有 agentID：检查 session 是否已完成
+      try {
+        const msgs = (await this.client.getMessages(t.agentID)) as Array<{
+          info?: { finish?: string };
+        }>;
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg?.info?.finish) {
+          // agent 已完成 → 标记完成
+          await this.store.markCompleted(t.id);
+          this.events.emitTask({ id: t.id, status: "completed" });
+        } else if (t.updatedAt < staleCutoff) {
+          // 超时 30min 仍未完成 → 标记失败并重试
+          await this.store.markFailed(t.id, "timeout (stale running)");
+        }
+      } catch {
+        // 无法连接 opencode → 回退到 pending
+        await this.store.update(t.id, { status: "pending" });
+      }
+    }
+  }
+
   /** 常驻模式：循环处理（Ctrl-C 退出） */
   async run(): Promise<void> {
+    await this.recoverStaleRunning();
     for (;;) {
       if (!this.paused) await this.processOne();
       await sleep(1000);

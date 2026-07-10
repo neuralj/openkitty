@@ -9,6 +9,7 @@ import { Store } from "./store.js";
 import { CooldownManager } from "./cooldown.js";
 import { QueueProcessor } from "./queue.js";
 import { RecurringScheduler } from "./recurring.js";
+import { PipelineRunner } from "./pipeline.js";
 import { startHttpServer, makeTask } from "./server.js";
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
@@ -28,6 +29,7 @@ async function main(): Promise<void> {
   );
   proc = new QueueProcessor(client, store, cooldown, events, cfg.model);
   const scheduler = new RecurringScheduler(store, proc, events);
+  const pipeline = new PipelineRunner(store, proc, events, client);
 
   events.on("task", (p) => console.log("[event:task]", p));
   events.on("status", (p) => console.log("[event:status]", p));
@@ -57,8 +59,9 @@ async function main(): Promise<void> {
   console.log(
     `[daemon] openhub-daemon server=${cfg.serverUrl} dirs=${cfg.directories} ping=${cfg.pingIntervalMs}ms db=${cfg.dbPath}`,
   );
-  startHttpServer({ config: cfg, events, queue: proc, store, client, cooldown, scheduler });
+  startHttpServer({ config: cfg, events, queue: proc, store, client, cooldown, scheduler, pipeline });
   scheduler.start();
+  pipeline.init();  // 恢复卡住的 pipeline + 注册事件监听
   await proc.run();
 }
 
