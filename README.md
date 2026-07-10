@@ -96,6 +96,7 @@ npm run typecheck
 ## 设计文档
 
 - [组件功能设计分析（OpenKit 溯源）](docs/DESIGN.md)：各组件功能设计、cooldown 分布式闭环、与 OpenKit 的迁移关系。
+- [OpenHub 迁移方案（daemon + MCP）](docs/OPENHUB-MIGRATION.md)：将 openhub 编排守护进程以纯 TS 重写为常驻 daemon + MCP 入口的详细功能与代码设计。
 
 ## 目录结构
 

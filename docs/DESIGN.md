@@ -114,8 +114,8 @@ wecom-notify  ── 推送 ──► 企业微信         │ REST + SSE
 | 3 个 skills | skill | `skills/*.md` | `skills/*.md` | ✅ 一致 |
 | `cloudsway-search` | mcp bundle | setup + 配置 | `mcp/*.md` + 配置 | ✅ 一致 |
 | `bing-search` | mcp bundle | 仅 setup 文档 | `mcp/*.md` + 自动配置 | ⚠️ openkitty 增强 |
-| `openhub` | Go daemon | 编排层 | — | 非插件，不迁移 |
-| `openhub-web` | Vue | Dashboard | — | 非插件，不迁移 |
+| `openhub` | Go daemon | 编排层 | `src/daemon/` + `src/mcp/openhub-mcp.ts` | 📋 计划迁移（见 [OPENHUB-MIGRATION.md](OPENHUB-MIGRATION.md)：重写为常驻 daemon + MCP 入口） |
+| `openhub-web` | Vue | Dashboard | `assets/openhub-web/` | 📋 计划随 daemon 迁移（静态托管） |
 | `opencar` | Go | 已废弃 | — | 不迁移 |
 | `lark-bridge` | Bun | 桥接进程 | — | 已排除，不迁移 |
 
