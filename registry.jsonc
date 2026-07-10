@@ -1,0 +1,99 @@
+{
+  // OpenKitty 组件清单 —— 替代 OCX registry，供 scripts/install.sh 读取并分发。
+  //
+  // 字段说明：
+  //   files    : 需从仓库拷贝到 PREFIX 的源文件（相对仓库根目录）
+  //   target   : 在 PREFIX 下的顶层目标目录（plugins / skills）
+  //   template : 需拷贝到 <project>/.opencode/ 下的资源文件（仅 wecom-notify 使用）
+  //   setupDoc : MCP 组件的安装说明文档路径
+  //   opencode : 需要合并进 opencode.jsonc 的配置片段
+  //              {prefix} 占位符会在安装时被替换为实际 PREFIX 路径
+
+  "name": "openkitty",
+  "version": "1.0.0",
+  "description": "OpenCode 插件 / Skill / MCP 集合（NeuralJ）",
+
+  "components": [
+    {
+      "name": "cooldown-guard",
+      "type": "plugin",
+      "description": "API 限流 retry 阻断：会话重试超过阈值时自动 abort",
+      "files": ["dist/plugins/cooldown-guard.js"],
+      "target": "plugins",
+      "opencode": {
+        "plugin": ["{prefix}/plugins/cooldown-guard.js"]
+      }
+    },
+    {
+      "name": "wecom-notify",
+      "type": "plugin",
+      "description": "会话摘要推送企业微信群机器人",
+      "files": ["dist/plugins/wecom-notify.js"],
+      "target": "plugins",
+      "template": "assets/wecom-template.md",
+      "opencode": {
+        "plugin": ["{prefix}/plugins/wecom-notify.js"]
+      }
+    },
+    {
+      "name": "cli-task-function-3layer-arch",
+      "type": "skill",
+      "description": "规范 CLI 项目结构：CLI → Task → Function 三层架构",
+      "files": ["skills/cli-task-function-3layer-arch/SKILL.md"],
+      "target": "skills",
+      "opencode": {
+        "skills": ["{prefix}/skills/cli-task-function-3layer-arch"]
+      }
+    },
+    {
+      "name": "end-handler-adapter-3layer-arch",
+      "type": "skill",
+      "description": "规范事件驱动 Daemon 结构：Endpoint → Handler → Adapter 三层架构",
+      "files": ["skills/end-handler-adapter-3layer-arch/SKILL.md"],
+      "target": "skills",
+      "opencode": {
+        "skills": ["{prefix}/skills/end-handler-adapter-3layer-arch"]
+      }
+    },
+    {
+      "name": "daemon-scheduler-endpoint-handler-adapter",
+      "type": "skill",
+      "description": "规范事件 + 定时任务混合 Daemon 结构：Scheduler + Endpoint → Handler → Adapter",
+      "files": ["skills/daemon-scheduler-endpoint-handler-adapter/SKILL.md"],
+      "target": "skills",
+      "opencode": {
+        "skills": ["{prefix}/skills/daemon-scheduler-endpoint-handler-adapter"]
+      }
+    },
+    {
+      "name": "bing-search",
+      "type": "mcp",
+      "description": "必应搜索 MCP 集成（需配置 BING_SEARCH_URL 环境变量）",
+      "setupDoc": "mcp/bing-search.md",
+      "opencode": {
+        "mcp": {
+          "bing-search": {
+            "type": "remote",
+            "url": "{env:BING_SEARCH_URL}",
+            "enabled": true
+          }
+        }
+      }
+    },
+    {
+      "name": "cloudsway-search",
+      "type": "mcp",
+      "description": "小宿科技智能搜索 MCP 集成（需配置 CLOUDSWAY_SEARCH_URL 环境变量）",
+      "setupDoc": "mcp/cloudsway-search.md",
+      "opencode": {
+        "mcp": {
+          "cloudsway": {
+            "type": "remote",
+            "url": "{env:CLOUDSWAY_SEARCH_URL}",
+            "enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

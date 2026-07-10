@@ -1,0 +1,70 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release 版本 (如 v1.0.0)"
+        required: true
+        default: "v0.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        run: npm install
+
+      - name: Build plugins (tsc -> dist/)
+        run: npm run build
+
+      - name: Package release tarball
+        run: |
+          PKG=openkitty-pkg
+          rm -rf "$PKG" && mkdir -p "$PKG/openkitty"
+          # 保持与仓库一致的目录布局，使 registry.jsonc 中的相对路径有效
+          cp -r dist        "$PKG/openkitty/dist"
+          cp -r skills      "$PKG/openkitty/skills"
+          cp -r assets      "$PKG/openkitty/assets"
+          cp -r mcp         "$PKG/openkitty/mcp"
+          cp -r scripts     "$PKG/openkitty/scripts"
+          cp    registry.jsonc README.md "$PKG/openkitty/"
+          tar -czf openkitty.tar.gz -C "$PKG" openkitty
+
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: OpenKitty ${{ steps.tag.outputs.tag }}
+          files: openkitty.tar.gz
+          generate_release_notes: true
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openkitty
+          path: openkitty.tar.gz
