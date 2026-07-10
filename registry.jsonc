@@ -94,6 +94,48 @@
           }
         }
       }
+    },
+
+    {
+      "name": "openhub",
+      "type": "daemon",
+      "description": "openhub 编排守护进程：队列 / 定时任务 / cooldown 自愈（常驻，不依赖 OpenCode 是否打开）",
+      "files": ["dist/daemon/**"],
+      "target": "daemon",
+      "launch": {
+        "command": ["node", "{prefix}/daemon/index.js"],
+        "env": {
+          "OPENHUB_SERVER_URL": "{env:OPENHUB_SERVER_URL}",
+          "OPENHUB_DIRECTORIES": "{env:OPENHUB_DIRECTORIES}",
+          "OPENHUB_PORT": "{env:OPENHUB_PORT}",
+          "OPENHUB_PING_INTERVAL": "{env:OPENHUB_PING_INTERVAL}",
+          "OPENHUB_MODEL": "{env:OPENHUB_MODEL}",
+          "OPENHUB_DB": "{env:OPENHUB_DB}"
+        }
+      },
+      "opencode": {}
+    },
+    {
+      "name": "openhub-mcp",
+      "type": "mcp",
+      "description": "openhub agent 操作入口（MCP server）：提交/查询任务、定时任务、agent 状态",
+      "setupDoc": "mcp/openhub.md",
+      "files": ["dist/mcp/openhub-mcp.js"],
+      "target": "mcp",
+      "opencode": {
+        "mcp": {
+          "openhub": {
+            "type": "local",
+            "command": "node",
+            "args": ["{prefix}/mcp/openhub-mcp.js"],
+            "enabled": true,
+            "env": {
+              "OPENHUB_DAEMON_PORT": "{env:OPENHUB_DAEMON_PORT}",
+              "OPENHUB_DAEMON_URL": "{env:OPENHUB_DAEMON_URL}"
+            }
+          }
+        }
+      }
     }
   ]
 }

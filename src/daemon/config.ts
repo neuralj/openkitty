@@ -1,4 +1,6 @@
-// spike: daemon 配置加载（读取环境变量）
+// daemon 配置加载（读取环境变量）
+import { homedir } from "node:os";
+
 export interface DaemonConfig {
   serverUrl: string;
   directories: string[];
@@ -6,6 +8,7 @@ export interface DaemonConfig {
   pingIntervalMs: number;
   model: string;
   dbPath: string;
+  webDir: string | null;
 }
 
 export function loadConfig(): DaemonConfig {
@@ -18,6 +21,7 @@ export function loadConfig(): DaemonConfig {
     port: Number(process.env.OPENHUB_PORT || 7099),
     pingIntervalMs: Number(process.env.OPENHUB_PING_INTERVAL || 14 * 60 * 1000),
     model: process.env.OPENHUB_MODEL || "",
-    dbPath: process.env.OPENHUB_DB || ".openhub.json",
+    dbPath: process.env.OPENHUB_DB || `${homedir()}/.openhub/daemon.json`,
+    webDir: process.env.OPENHUB_WEB_DIR || null,
   };
 }
